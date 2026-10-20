@@ -1,11 +1,9 @@
-import javax.swing.*;
-import java.awt.*;
+import java.awt.GridLayout;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
-/**
- * Tela da aba Professores no JTabbedPane.
- * Herda a estrutura de TelaCrudBase e implementa a conversão e tratamento
- * de exceção para o campo numérico de salário (double).
- */
 public class TelaProfessor extends TelaCrudBase<Professor> {
 
     private JTextField campoNome;
@@ -42,7 +40,6 @@ public class TelaProfessor extends TelaCrudBase<Professor> {
 
     @Override
     protected Object[] converterParaLinhaTabela(Professor professor) {
-        // Exibe o salário formatado com duas casas decimais e vírgula
         return new Object[]{
                 professor.getNome(),
                 professor.getTitulacao(),
@@ -55,10 +52,6 @@ public class TelaProfessor extends TelaCrudBase<Professor> {
         return validarCamposPreenchidos(campoNome, campoTitulacao, campoSalario);
     }
 
-    /**
-     * Converte o texto digitado em double, substituindo vírgula por ponto.
-     * @throws NumberFormatException se o valor não for um número válido.
-     */
     private double parseSalario() throws NumberFormatException {
         return Double.parseDouble(campoSalario.getText().trim().replace(",", "."));
     }
@@ -83,7 +76,6 @@ public class TelaProfessor extends TelaCrudBase<Professor> {
     protected void preencherCampos(Professor professor) {
         campoNome.setText(professor.getNome());
         campoTitulacao.setText(professor.getTitulacao());
-        // Apresenta com vírgula para manter a experiência brasileira de digitação
         campoSalario.setText(String.format("%.2f", professor.getSalario()));
     }
 

@@ -1,11 +1,9 @@
-import javax.swing.*;
-import java.awt.*;
+import java.awt.GridLayout;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
-/**
- * Tela da aba Disciplinas no JTabbedPane.
- * Herda a estrutura de TelaCrudBase e implementa a conversão e tratamento
- * de exceção para o campo numérico de carga horária (int).
- */
 public class TelaDisciplina extends TelaCrudBase<Disciplina> {
 
     private JTextField campoNome;

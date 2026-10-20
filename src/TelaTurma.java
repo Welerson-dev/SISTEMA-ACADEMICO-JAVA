@@ -1,11 +1,9 @@
-import javax.swing.*;
-import java.awt.*;
+import java.awt.GridLayout;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
-/**
- * Tela da aba Turmas no JTabbedPane (desafio opcional).
- * Herda a estrutura de TelaCrudBase e implementa a conversão e tratamento
- * de exceção para o campo numérico de vagas (int).
- */
 public class TelaTurma extends TelaCrudBase<Turma> {
 
     private JTextField campoCodigo;

@@ -1,11 +1,8 @@
-import javax.swing.*;
-import java.awt.*;
+import java.awt.GridLayout;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
-/**
- * Tela da aba Alunos no JTabbedPane.
- * Herda toda a infraestrutura de CRUD e Swing de TelaCrudBase.
- * Campos: Nome (texto), Matrícula (texto), Cidade (texto).
- */
 public class TelaAluno extends TelaCrudBase<Aluno> {
 
     private JTextField campoNome;

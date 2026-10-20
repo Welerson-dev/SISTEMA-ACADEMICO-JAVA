@@ -1,8 +1,3 @@
-/**
- * Entidade Disciplina - guarda os dados encapsulados.
- * Sabe converter-se em linha de texto (toLinha) e voltar a ser objeto (fromLinha).
- * Arquivo correspondente: disciplinas.txt
- */
 public class Disciplina implements Persistivel {
 
     private String nome;
@@ -15,7 +10,6 @@ public class Disciplina implements Persistivel {
         this.periodo = periodo;
     }
 
-    // Getters
     public String getNome() {
         return nome;
     }
@@ -28,7 +22,6 @@ public class Disciplina implements Persistivel {
         return periodo;
     }
 
-    // Setters
     public void setNome(String nome) {
         this.nome = nome;
     }
@@ -41,18 +34,11 @@ public class Disciplina implements Persistivel {
         this.periodo = periodo;
     }
 
-    /**
-     * Converte o objeto Disciplina em uma linha de texto separada por ponto e vírgula.
-     * Formato: nome;cargaHoraria;periodo
-     */
+    @Override
     public String toLinha() {
         return nome + ";" + cargaHoraria + ";" + periodo;
     }
 
-    /**
-     * Cria um objeto Disciplina a partir de uma linha de texto separada por ponto e vírgula.
-     * Formato esperado: nome;cargaHoraria;periodo
-     */
     public static Disciplina fromLinha(String linha) {
         String[] partes = linha.split(";");
         return new Disciplina(partes[0], Integer.parseInt(partes[1]), partes[2]);

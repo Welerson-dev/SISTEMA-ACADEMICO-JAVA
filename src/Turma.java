@@ -1,8 +1,3 @@
-/**
- * Entidade Turma - guarda os dados encapsulados (desafio opcional, quarta aba).
- * Sabe converter-se em linha de texto (toLinha) e voltar a ser objeto (fromLinha).
- * Arquivo correspondente: turmas.txt
- */
 public class Turma implements Persistivel {
 
     private String codigo;
@@ -15,7 +10,6 @@ public class Turma implements Persistivel {
         this.vagas = vagas;
     }
 
-    // Getters
     public String getCodigo() {
         return codigo;
     }
@@ -28,7 +22,6 @@ public class Turma implements Persistivel {
         return vagas;
     }
 
-    // Setters
     public void setCodigo(String codigo) {
         this.codigo = codigo;
     }
@@ -41,18 +34,11 @@ public class Turma implements Persistivel {
         this.vagas = vagas;
     }
 
-    /**
-     * Converte o objeto Turma em uma linha de texto separada por ponto e vírgula.
-     * Formato: codigo;curso;vagas
-     */
+    @Override
     public String toLinha() {
         return codigo + ";" + curso + ";" + vagas;
     }
 
-    /**
-     * Cria um objeto Turma a partir de uma linha de texto separada por ponto e vírgula.
-     * Formato esperado: codigo;curso;vagas
-     */
     public static Turma fromLinha(String linha) {
         String[] partes = linha.split(";");
         return new Turma(partes[0], partes[1], Integer.parseInt(partes[2]));

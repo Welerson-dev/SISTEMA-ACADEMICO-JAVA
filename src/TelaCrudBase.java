@@ -1,23 +1,19 @@
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
 
-/**
- * Classe base abstrata para as telas de cadastro (CRUD) do Sistema Acadêmico.
- *
- * Centraliza e padroniza todo o comportamento comum das abas:
- * - JTable com isCellEditable falso (edição restrita aos campos + botão Alterar)
- * - Carregamento inicial via listarTodos()
- * - Listener de seleção na tabela para preenchimento automático dos campos
- * - Botões padronizados: Adicionar, Alterar e Excluir
- * - Validação de preenchimento obrigatório com JOptionPane
- * - Guarda contra operações sem linha selecionada (getSelectedRow() < 0)
- * - Persistência automática completa (salvarTodos) após cada alteração
- * - Tratamento gracioso de NumberFormatException para campos numéricos
- *
- * @param <T> Tipo da entidade que estende Persistivel
- */
 public abstract class TelaCrudBase<T extends Persistivel> extends JPanel {
 
     protected final JTable tabela;
@@ -32,43 +28,59 @@ public abstract class TelaCrudBase<T extends Persistivel> extends JPanel {
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // 1. Painel superior com campos específicos da entidade
         JPanel painelCampos = criarPainelCampos();
         painelCampos.setBorder(BorderFactory.createTitledBorder(tituloCampos));
         add(painelCampos, BorderLayout.NORTH);
 
-        // 2. Tabela central com células não editáveis
         modeloTabela = new DefaultTableModel(getColunasTabela(), 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Edição é feita pelos campos + botão Alterar
+                return false;
             }
         };
         tabela = new JTable(modeloTabela);
         atualizarTabela();
 
-        // Listener de seleção: clicar na linha joga os dados nos campos
-        tabela.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                int linha = tabela.getSelectedRow();
-                if (linha >= 0 && linha < itens.size()) {
-                    preencherCampos(itens.get(linha));
+        tabela.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    int linha = tabela.getSelectedRow();
+                    if (linha >= 0 && linha < itens.size()) {
+                        preencherCampos(itens.get(linha));
+                    }
                 }
             }
         });
 
         add(new JScrollPane(tabela), BorderLayout.CENTER);
 
-        // 3. Painel inferior com os botões de ação
         JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
 
         JButton btnAdicionar = new JButton("Adicionar");
         JButton btnAlterar = new JButton("Alterar");
         JButton btnExcluir = new JButton("Excluir");
 
-        btnAdicionar.addActionListener(e -> acaoAdicionar());
-        btnAlterar.addActionListener(e -> acaoAlterar());
-        btnExcluir.addActionListener(e -> acaoExcluir());
+        btnAdicionar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                acaoAdicionar();
+            }
+        });
+
+        btnAlterar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                acaoAlterar();
+            }
+        });
+
+        btnExcluir.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                acaoExcluir();
+            }
+        });
 
         painelBotoes.add(btnAdicionar);
         painelBotoes.add(btnAlterar);
@@ -77,9 +89,6 @@ public abstract class TelaCrudBase<T extends Persistivel> extends JPanel {
         add(painelBotoes, BorderLayout.SOUTH);
     }
 
-    /**
-     * Auxiliar para checar se campos de texto foram preenchidos.
-     */
     protected boolean validarCamposPreenchidos(JTextField... campos) {
         for (JTextField campo : campos) {
             if (campo.getText().trim().isEmpty()) {
@@ -89,10 +98,6 @@ public abstract class TelaCrudBase<T extends Persistivel> extends JPanel {
         return true;
     }
 
-    /**
-     * Fluxo de Adicionar: valida campos vazios, converte entidade, adiciona à lista,
-     * salva no arquivo, atualiza a tabela e limpa os campos.
-     */
     private void acaoAdicionar() {
         if (!validarCampos()) {
             JOptionPane.showMessageDialog(this,
@@ -114,10 +119,6 @@ public abstract class TelaCrudBase<T extends Persistivel> extends JPanel {
         }
     }
 
-    /**
-     * Fluxo de Alterar: guarda contra nenhuma linha selecionada, valida campos,
-     * atualiza o registro, salva no arquivo, atualiza a tabela e limpa os campos.
-     */
     private void acaoAlterar() {
         int linha = tabela.getSelectedRow();
         if (linha < 0) {
@@ -145,10 +146,6 @@ public abstract class TelaCrudBase<T extends Persistivel> extends JPanel {
         }
     }
 
-    /**
-     * Fluxo de Excluir: guarda contra nenhuma linha selecionada, remove o item,
-     * reescreve o arquivo com salvarTodos, atualiza a tabela e limpa os campos.
-     */
     private void acaoExcluir() {
         int linha = tabela.getSelectedRow();
         if (linha < 0) {
@@ -164,17 +161,12 @@ public abstract class TelaCrudBase<T extends Persistivel> extends JPanel {
         limparCampos();
     }
 
-    /**
-     * Atualiza todas as linhas da JTable a partir da lista em memória.
-     */
     protected void atualizarTabela() {
         modeloTabela.setRowCount(0);
         for (T item : itens) {
             modeloTabela.addRow(converterParaLinhaTabela(item));
         }
     }
-
-    // --- Métodos de customização para as subclasses ---
 
     protected abstract JPanel criarPainelCampos();
 
@@ -192,9 +184,6 @@ public abstract class TelaCrudBase<T extends Persistivel> extends JPanel {
 
     protected abstract void limparCampos();
 
-    /**
-     * Tratamento personalizável para erros de formatação de número.
-     */
     protected void tratarErroNumero(NumberFormatException ex) {
         JOptionPane.showMessageDialog(this,
                 "Valor numérico inválido!",
