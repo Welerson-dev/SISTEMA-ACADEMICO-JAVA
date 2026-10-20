@@ -1,187 +1,80 @@
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.ArrayList;
 
 /**
  * Tela da aba Alunos no JTabbedPane.
- * Contém JTable + campos de texto + botões Adicionar, Alterar e Excluir.
- * Cuida de todo o CRUD da entidade Aluno, usando AlunoArquivo para persistência.
+ * Herda toda a infraestrutura de CRUD e Swing de TelaCrudBase.
+ * Campos: Nome (texto), Matrícula (texto), Cidade (texto).
  */
-public class TelaAluno extends JPanel {
+public class TelaAluno extends TelaCrudBase<Aluno> {
 
     private JTextField campoNome;
     private JTextField campoMatricula;
     private JTextField campoCidade;
-    private JTable tabela;
-    private DefaultTableModel modeloTabela;
-    private ArrayList<Aluno> alunos;
-    private AlunoArquivo alunoArquivo;
 
     public TelaAluno() {
-        alunoArquivo = new AlunoArquivo();
-        alunos = alunoArquivo.listarTodos();
+        super(new AlunoArquivo(), "Dados do Aluno");
+    }
 
-        setLayout(new BorderLayout(10, 10));
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    @Override
+    protected JPanel criarPainelCampos() {
+        JPanel painel = new JPanel(new GridLayout(3, 2, 5, 5));
 
-        // --- Painel de campos ---
-        JPanel painelCampos = new JPanel(new GridLayout(3, 2, 5, 5));
-        painelCampos.setBorder(BorderFactory.createTitledBorder("Dados do Aluno"));
-
-        painelCampos.add(new JLabel("Nome:"));
+        painel.add(new JLabel("Nome:"));
         campoNome = new JTextField();
-        painelCampos.add(campoNome);
+        painel.add(campoNome);
 
-        painelCampos.add(new JLabel("Matrícula:"));
+        painel.add(new JLabel("Matrícula:"));
         campoMatricula = new JTextField();
-        painelCampos.add(campoMatricula);
+        painel.add(campoMatricula);
 
-        painelCampos.add(new JLabel("Cidade:"));
+        painel.add(new JLabel("Cidade:"));
         campoCidade = new JTextField();
-        painelCampos.add(campoCidade);
+        painel.add(campoCidade);
 
-        add(painelCampos, BorderLayout.NORTH);
-
-        // --- Tabela ---
-        modeloTabela = new DefaultTableModel(new String[]{"Nome", "Matrícula", "Cidade"}, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // A edição é feita pelos campos + botão Alterar
-            }
-        };
-        tabela = new JTable(modeloTabela);
-        atualizarTabela();
-
-        // Listener de seleção: ao clicar numa linha, preenche os campos
-        tabela.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                int linhaSelecionada = tabela.getSelectedRow();
-                if (linhaSelecionada >= 0) {
-                    Aluno aluno = alunos.get(linhaSelecionada);
-                    campoNome.setText(aluno.getNome());
-                    campoMatricula.setText(aluno.getMatricula());
-                    campoCidade.setText(aluno.getCidade());
-                }
-            }
-        });
-
-        add(new JScrollPane(tabela), BorderLayout.CENTER);
-
-        // --- Painel de botões ---
-        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
-
-        JButton btnAdicionar = new JButton("Adicionar");
-        JButton btnAlterar = new JButton("Alterar");
-        JButton btnExcluir = new JButton("Excluir");
-
-        btnAdicionar.addActionListener(e -> adicionar());
-        btnAlterar.addActionListener(e -> alterar());
-        btnExcluir.addActionListener(e -> excluir());
-
-        painelBotoes.add(btnAdicionar);
-        painelBotoes.add(btnAlterar);
-        painelBotoes.add(btnExcluir);
-
-        add(painelBotoes, BorderLayout.SOUTH);
+        return painel;
     }
 
-    /**
-     * Adiciona um novo aluno com os dados dos campos.
-     * Nenhum campo pode ficar vazio.
-     */
-    private void adicionar() {
-        String nome = campoNome.getText().trim();
-        String matricula = campoMatricula.getText().trim();
-        String cidade = campoCidade.getText().trim();
-
-        if (nome.isEmpty() || matricula.isEmpty() || cidade.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Todos os campos devem ser preenchidos!",
-                    "Campo vazio", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        Aluno novoAluno = new Aluno(nome, matricula, cidade);
-        alunos.add(novoAluno);
-        alunoArquivo.salvarTodos(alunos);
-        atualizarTabela();
-        limparCampos();
+    @Override
+    protected String[] getColunasTabela() {
+        return new String[]{"Nome", "Matrícula", "Cidade"};
     }
 
-    /**
-     * Altera o registro da linha selecionada na tabela pelos dados dos campos.
-     * Verifica se há linha selecionada antes de prosseguir.
-     */
-    private void alterar() {
-        int linhaSelecionada = tabela.getSelectedRow();
-
-        if (linhaSelecionada < 0) {
-            JOptionPane.showMessageDialog(this,
-                    "Selecione uma linha na tabela para alterar!",
-                    "Nenhuma seleção", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        String nome = campoNome.getText().trim();
-        String matricula = campoMatricula.getText().trim();
-        String cidade = campoCidade.getText().trim();
-
-        if (nome.isEmpty() || matricula.isEmpty() || cidade.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Todos os campos devem ser preenchidos!",
-                    "Campo vazio", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        Aluno aluno = alunos.get(linhaSelecionada);
-        aluno.setNome(nome);
-        aluno.setMatricula(matricula);
-        aluno.setCidade(cidade);
-
-        alunoArquivo.salvarTodos(alunos);
-        atualizarTabela();
-        limparCampos();
+    @Override
+    protected Object[] converterParaLinhaTabela(Aluno aluno) {
+        return new Object[]{aluno.getNome(), aluno.getMatricula(), aluno.getCidade()};
     }
 
-    /**
-     * Exclui o registro da linha selecionada.
-     * Verifica se há linha selecionada antes de prosseguir.
-     */
-    private void excluir() {
-        int linhaSelecionada = tabela.getSelectedRow();
-
-        if (linhaSelecionada < 0) {
-            JOptionPane.showMessageDialog(this,
-                    "Selecione uma linha na tabela para excluir!",
-                    "Nenhuma seleção", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        alunos.remove(linhaSelecionada);
-        alunoArquivo.salvarTodos(alunos);
-        atualizarTabela();
-        limparCampos();
+    @Override
+    protected boolean validarCampos() {
+        return validarCamposPreenchidos(campoNome, campoMatricula, campoCidade);
     }
 
-    /**
-     * Atualiza a JTable com os dados atuais da lista em memória.
-     */
-    private void atualizarTabela() {
-        modeloTabela.setRowCount(0);
-        for (Aluno aluno : alunos) {
-            modeloTabela.addRow(new Object[]{
-                    aluno.getNome(),
-                    aluno.getMatricula(),
-                    aluno.getCidade()
-            });
-        }
+    @Override
+    protected Aluno criarEntidadeDosCampos() {
+        return new Aluno(
+                campoNome.getText().trim(),
+                campoMatricula.getText().trim(),
+                campoCidade.getText().trim()
+        );
     }
 
-    /**
-     * Limpa todos os campos de texto após uma operação.
-     */
-    private void limparCampos() {
+    @Override
+    protected void atualizarEntidade(Aluno aluno) {
+        aluno.setNome(campoNome.getText().trim());
+        aluno.setMatricula(campoMatricula.getText().trim());
+        aluno.setCidade(campoCidade.getText().trim());
+    }
+
+    @Override
+    protected void preencherCampos(Aluno aluno) {
+        campoNome.setText(aluno.getNome());
+        campoMatricula.setText(aluno.getMatricula());
+        campoCidade.setText(aluno.getCidade());
+    }
+
+    @Override
+    protected void limparCampos() {
         campoNome.setText("");
         campoMatricula.setText("");
         campoCidade.setText("");
