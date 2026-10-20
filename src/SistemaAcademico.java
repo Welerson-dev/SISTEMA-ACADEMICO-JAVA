@@ -12,9 +12,14 @@ public class SistemaAcademico {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception ignored) {
+            }
+
             JFrame janela = new JFrame("Sistema Acadêmico");
             janela.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            janela.setSize(700, 500);
+            janela.setSize(750, 520);
             janela.setLocationRelativeTo(null); // Centraliza na tela
 
             // JTabbedPane — cada aba é a tela de cadastro de uma entidade
