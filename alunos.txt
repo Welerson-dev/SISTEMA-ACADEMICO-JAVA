@@ -1,0 +1,5 @@
+Ana Souza;2024001;Rio Verde
+Bruno Lima;2024002;Goiânia
+Carla Dias;2024003;Rio Verde
+Diego Alves;2024004;Jataí
+Elaine Rocha;2024005;Rio Verde

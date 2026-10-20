@@ -1,0 +1,4 @@
+Marcos Vieira;Doutor;8500.0
+Paula Nunes;Mestre;6200.5
+Rafael Gomes;Especialista;4800.0
+Sônia Teixeira;Doutor;9100.0

@@ -1,0 +1,4 @@
+Algoritmos;80;1º
+Banco de Dados;60;3º
+Engenharia de Software;60;5º
+Redes;40;4º

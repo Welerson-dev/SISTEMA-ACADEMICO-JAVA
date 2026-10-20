@@ -1,0 +1,3 @@
+ESW-1A;Engenharia de Software;45
+ESW-3B;Engenharia de Software;40
+ADS-2A;Análise e Desenvolvimento;50
