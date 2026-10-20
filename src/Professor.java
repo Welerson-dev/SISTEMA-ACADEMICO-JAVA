@@ -9,7 +9,7 @@
  * A conversão de vírgula para ponto é feita na TelaAluno antes de chamar o construtor.
  * Isso explica por que o arquivo mostra "6200.5" mesmo tendo digitado "6200,50".
  */
-public class Professor {
+public class Professor implements Persistivel {
 
     private String nome;
     private String titulacao;

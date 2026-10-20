@@ -3,7 +3,7 @@
  * Sabe converter-se em linha de texto (toLinha) e voltar a ser objeto (fromLinha).
  * Arquivo correspondente: turmas.txt
  */
-public class Turma {
+public class Turma implements Persistivel {
 
     private String codigo;
     private String curso;
