@@ -24,7 +24,6 @@ public class SistemaAcademico {
                 abas.addTab("Alunos", new TelaAluno());
                 abas.addTab("Professores", new TelaProfessor());
                 abas.addTab("Disciplinas", new TelaDisciplina());
-                abas.addTab("Turmas", new TelaTurma());
 
                 janela.add(abas);
                 janela.setVisible(true);

@@ -1,4 +1,4 @@
-public class Disciplina implements Persistivel {
+public class Disciplina {
 
     private String nome;
     private int cargaHoraria;
@@ -34,7 +34,6 @@ public class Disciplina implements Persistivel {
         this.periodo = periodo;
     }
 
-    @Override
     public String toLinha() {
         return nome + ";" + cargaHoraria + ";" + periodo;
     }

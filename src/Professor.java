@@ -1,4 +1,4 @@
-public class Professor implements Persistivel {
+public class Professor {
 
     private String nome;
     private String titulacao;
@@ -34,7 +34,6 @@ public class Professor implements Persistivel {
         this.salario = salario;
     }
 
-    @Override
     public String toLinha() {
         return nome + ";" + titulacao + ";" + salario;
     }

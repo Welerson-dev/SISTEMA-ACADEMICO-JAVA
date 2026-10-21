@@ -1,4 +1,4 @@
-public class Aluno implements Persistivel {
+public class Aluno {
 
     private String nome;
     private String matricula;
@@ -34,7 +34,6 @@ public class Aluno implements Persistivel {
         this.cidade = cidade;
     }
 
-    @Override
     public String toLinha() {
         return nome + ";" + matricula + ";" + cidade;
     }

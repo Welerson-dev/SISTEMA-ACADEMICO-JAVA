@@ -1,95 +1,201 @@
-import java.awt.GridLayout;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+import javax.swing.*;
+import javax.swing.event.*;
+import javax.swing.table.*;
 
-public class TelaDisciplina extends TelaCrudBase<Disciplina> {
+public class TelaDisciplina extends JPanel {
 
     private JTextField campoNome;
     private JTextField campoCargaHoraria;
     private JTextField campoPeriodo;
+    private JTable tabela;
+    private DefaultTableModel modeloTabela;
+    private ArrayList<Disciplina> disciplinas;
+    private DisciplinaArquivo disciplinaArquivo;
 
     public TelaDisciplina() {
-        super(new DisciplinaArquivo(), "Dados da Disciplina");
-    }
+        disciplinaArquivo = new DisciplinaArquivo();
+        disciplinas = disciplinaArquivo.listarTodos();
 
-    @Override
-    protected JPanel criarPainelCampos() {
-        JPanel painel = new JPanel(new GridLayout(3, 2, 5, 5));
+        setLayout(new BorderLayout(10, 10));
+        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        painel.add(new JLabel("Nome:"));
+        JPanel painelCampos = new JPanel(new GridLayout(3, 2, 5, 5));
+        painelCampos.setBorder(BorderFactory.createTitledBorder("Dados da Disciplina"));
+
+        painelCampos.add(new JLabel("Nome:"));
         campoNome = new JTextField();
-        painel.add(campoNome);
+        painelCampos.add(campoNome);
 
-        painel.add(new JLabel("Carga Horária:"));
+        painelCampos.add(new JLabel("Carga Horária:"));
         campoCargaHoraria = new JTextField();
-        painel.add(campoCargaHoraria);
+        painelCampos.add(campoCargaHoraria);
 
-        painel.add(new JLabel("Período:"));
+        painelCampos.add(new JLabel("Período:"));
         campoPeriodo = new JTextField();
-        painel.add(campoPeriodo);
+        painelCampos.add(campoPeriodo);
 
-        return painel;
-    }
+        add(painelCampos, BorderLayout.NORTH);
 
-    @Override
-    protected String[] getColunasTabela() {
-        return new String[]{"Nome", "Carga Horária", "Período"};
-    }
-
-    @Override
-    protected Object[] converterParaLinhaTabela(Disciplina disciplina) {
-        return new Object[]{
-                disciplina.getNome(),
-                disciplina.getCargaHoraria(),
-                disciplina.getPeriodo()
+        modeloTabela = new DefaultTableModel(new String[]{"Nome", "Carga Horária", "Período"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
+        tabela = new JTable(modeloTabela);
+        atualizarTabela();
+
+        tabela.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    int linha = tabela.getSelectedRow();
+                    if (linha >= 0 && linha < disciplinas.size()) {
+                        Disciplina disciplina = disciplinas.get(linha);
+                        campoNome.setText(disciplina.getNome());
+                        campoCargaHoraria.setText(String.valueOf(disciplina.getCargaHoraria()));
+                        campoPeriodo.setText(disciplina.getPeriodo());
+                    }
+                }
+            }
+        });
+
+        add(new JScrollPane(tabela), BorderLayout.CENTER);
+
+        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        JButton btnAdicionar = new JButton("Adicionar");
+        JButton btnAlterar = new JButton("Alterar");
+        JButton btnExcluir = new JButton("Excluir");
+
+        btnAdicionar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                adicionar();
+            }
+        });
+
+        btnAlterar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                alterar();
+            }
+        });
+
+        btnExcluir.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                excluir();
+            }
+        });
+
+        painelBotoes.add(btnAdicionar);
+        painelBotoes.add(btnAlterar);
+        painelBotoes.add(btnExcluir);
+
+        add(painelBotoes, BorderLayout.SOUTH);
     }
 
-    @Override
-    protected boolean validarCampos() {
-        return validarCamposPreenchidos(campoNome, campoCargaHoraria, campoPeriodo);
+    private void adicionar() {
+        String nome = campoNome.getText().trim();
+        String cargaTexto = campoCargaHoraria.getText().trim();
+        String periodo = campoPeriodo.getText().trim();
+
+        if (nome.isEmpty() || cargaTexto.isEmpty() || periodo.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Todos os campos devem ser preenchidos!",
+                    "Campo vazio", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int cargaHoraria;
+        try {
+            cargaHoraria = Integer.parseInt(cargaTexto);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "A carga horária deve ser um número inteiro válido!\nExemplo: 60",
+                    "Valor inválido", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        Disciplina nova = new Disciplina(nome, cargaHoraria, periodo);
+        disciplinas.add(nova);
+        disciplinaArquivo.salvarTodos(disciplinas);
+        atualizarTabela();
+        limparCampos();
     }
 
-    private int parseCargaHoraria() throws NumberFormatException {
-        return Integer.parseInt(campoCargaHoraria.getText().trim());
+    private void alterar() {
+        int linha = tabela.getSelectedRow();
+        if (linha < 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Selecione uma linha na tabela para alterar!",
+                    "Nenhuma seleção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String nome = campoNome.getText().trim();
+        String cargaTexto = campoCargaHoraria.getText().trim();
+        String periodo = campoPeriodo.getText().trim();
+
+        if (nome.isEmpty() || cargaTexto.isEmpty() || periodo.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Todos os campos devem ser preenchidos!",
+                    "Campo vazio", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int cargaHoraria;
+        try {
+            cargaHoraria = Integer.parseInt(cargaTexto);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "A carga horária deve ser um número inteiro válido!\nExemplo: 60",
+                    "Valor inválido", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        Disciplina disciplina = disciplinas.get(linha);
+        disciplina.setNome(nome);
+        disciplina.setCargaHoraria(cargaHoraria);
+        disciplina.setPeriodo(periodo);
+
+        disciplinaArquivo.salvarTodos(disciplinas);
+        atualizarTabela();
+        limparCampos();
     }
 
-    @Override
-    protected Disciplina criarEntidadeDosCampos() throws NumberFormatException {
-        return new Disciplina(
-                campoNome.getText().trim(),
-                parseCargaHoraria(),
-                campoPeriodo.getText().trim()
-        );
+    private void excluir() {
+        int linha = tabela.getSelectedRow();
+        if (linha < 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Selecione uma linha na tabela para excluir!",
+                    "Nenhuma seleção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        disciplinas.remove(linha);
+        disciplinaArquivo.salvarTodos(disciplinas);
+        atualizarTabela();
+        limparCampos();
     }
 
-    @Override
-    protected void atualizarEntidade(Disciplina disciplina) throws NumberFormatException {
-        disciplina.setNome(campoNome.getText().trim());
-        disciplina.setCargaHoraria(parseCargaHoraria());
-        disciplina.setPeriodo(campoPeriodo.getText().trim());
+    private void atualizarTabela() {
+        modeloTabela.setRowCount(0);
+        for (Disciplina disciplina : disciplinas) {
+            modeloTabela.addRow(new Object[]{
+                    disciplina.getNome(),
+                    disciplina.getCargaHoraria(),
+                    disciplina.getPeriodo()
+            });
+        }
     }
 
-    @Override
-    protected void preencherCampos(Disciplina disciplina) {
-        campoNome.setText(disciplina.getNome());
-        campoCargaHoraria.setText(String.valueOf(disciplina.getCargaHoraria()));
-        campoPeriodo.setText(disciplina.getPeriodo());
-    }
-
-    @Override
-    protected void limparCampos() {
+    private void limparCampos() {
         campoNome.setText("");
         campoCargaHoraria.setText("");
         campoPeriodo.setText("");
-    }
-
-    @Override
-    protected void tratarErroNumero(NumberFormatException ex) {
-        JOptionPane.showMessageDialog(this,
-                "A carga horária deve ser um número inteiro válido!\nExemplo: 60",
-                "Valor inválido", JOptionPane.ERROR_MESSAGE);
     }
 }

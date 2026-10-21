@@ -1,95 +1,201 @@
-import java.awt.GridLayout;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+import javax.swing.*;
+import javax.swing.event.*;
+import javax.swing.table.*;
 
-public class TelaProfessor extends TelaCrudBase<Professor> {
+public class TelaProfessor extends JPanel {
 
     private JTextField campoNome;
     private JTextField campoTitulacao;
     private JTextField campoSalario;
+    private JTable tabela;
+    private DefaultTableModel modeloTabela;
+    private ArrayList<Professor> professores;
+    private ProfessorArquivo professorArquivo;
 
     public TelaProfessor() {
-        super(new ProfessorArquivo(), "Dados do Professor");
-    }
+        professorArquivo = new ProfessorArquivo();
+        professores = professorArquivo.listarTodos();
 
-    @Override
-    protected JPanel criarPainelCampos() {
-        JPanel painel = new JPanel(new GridLayout(3, 2, 5, 5));
+        setLayout(new BorderLayout(10, 10));
+        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        painel.add(new JLabel("Nome:"));
+        JPanel painelCampos = new JPanel(new GridLayout(3, 2, 5, 5));
+        painelCampos.setBorder(BorderFactory.createTitledBorder("Dados do Professor"));
+
+        painelCampos.add(new JLabel("Nome:"));
         campoNome = new JTextField();
-        painel.add(campoNome);
+        painelCampos.add(campoNome);
 
-        painel.add(new JLabel("Titulação:"));
+        painelCampos.add(new JLabel("Titulação:"));
         campoTitulacao = new JTextField();
-        painel.add(campoTitulacao);
+        painelCampos.add(campoTitulacao);
 
-        painel.add(new JLabel("Salário:"));
+        painelCampos.add(new JLabel("Salário:"));
         campoSalario = new JTextField();
-        painel.add(campoSalario);
+        painelCampos.add(campoSalario);
 
-        return painel;
-    }
+        add(painelCampos, BorderLayout.NORTH);
 
-    @Override
-    protected String[] getColunasTabela() {
-        return new String[]{"Nome", "Titulação", "Salário"};
-    }
-
-    @Override
-    protected Object[] converterParaLinhaTabela(Professor professor) {
-        return new Object[]{
-                professor.getNome(),
-                professor.getTitulacao(),
-                String.format("%.2f", professor.getSalario())
+        modeloTabela = new DefaultTableModel(new String[]{"Nome", "Titulação", "Salário"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
+        tabela = new JTable(modeloTabela);
+        atualizarTabela();
+
+        tabela.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    int linha = tabela.getSelectedRow();
+                    if (linha >= 0 && linha < professores.size()) {
+                        Professor professor = professores.get(linha);
+                        campoNome.setText(professor.getNome());
+                        campoTitulacao.setText(professor.getTitulacao());
+                        campoSalario.setText(String.format("%.2f", professor.getSalario()));
+                    }
+                }
+            }
+        });
+
+        add(new JScrollPane(tabela), BorderLayout.CENTER);
+
+        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        JButton btnAdicionar = new JButton("Adicionar");
+        JButton btnAlterar = new JButton("Alterar");
+        JButton btnExcluir = new JButton("Excluir");
+
+        btnAdicionar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                adicionar();
+            }
+        });
+
+        btnAlterar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                alterar();
+            }
+        });
+
+        btnExcluir.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                excluir();
+            }
+        });
+
+        painelBotoes.add(btnAdicionar);
+        painelBotoes.add(btnAlterar);
+        painelBotoes.add(btnExcluir);
+
+        add(painelBotoes, BorderLayout.SOUTH);
     }
 
-    @Override
-    protected boolean validarCampos() {
-        return validarCamposPreenchidos(campoNome, campoTitulacao, campoSalario);
+    private void adicionar() {
+        String nome = campoNome.getText().trim();
+        String titulacao = campoTitulacao.getText().trim();
+        String salarioTexto = campoSalario.getText().trim();
+
+        if (nome.isEmpty() || titulacao.isEmpty() || salarioTexto.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Todos os campos devem ser preenchidos!",
+                    "Campo vazio", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        double salario;
+        try {
+            salario = Double.parseDouble(salarioTexto.replace(",", "."));
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "O salário deve ser um valor numérico válido!\nExemplo: 6200,50",
+                    "Valor inválido", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        Professor novo = new Professor(nome, titulacao, salario);
+        professores.add(novo);
+        professorArquivo.salvarTodos(professores);
+        atualizarTabela();
+        limparCampos();
     }
 
-    private double parseSalario() throws NumberFormatException {
-        return Double.parseDouble(campoSalario.getText().trim().replace(",", "."));
+    private void alterar() {
+        int linha = tabela.getSelectedRow();
+        if (linha < 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Selecione uma linha na tabela para alterar!",
+                    "Nenhuma seleção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String nome = campoNome.getText().trim();
+        String titulacao = campoTitulacao.getText().trim();
+        String salarioTexto = campoSalario.getText().trim();
+
+        if (nome.isEmpty() || titulacao.isEmpty() || salarioTexto.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Todos os campos devem ser preenchidos!",
+                    "Campo vazio", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        double salario;
+        try {
+            salario = Double.parseDouble(salarioTexto.replace(",", "."));
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "O salário deve ser um valor numérico válido!\nExemplo: 6200,50",
+                    "Valor inválido", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        Professor professor = professores.get(linha);
+        professor.setNome(nome);
+        professor.setTitulacao(titulacao);
+        professor.setSalario(salario);
+
+        professorArquivo.salvarTodos(professores);
+        atualizarTabela();
+        limparCampos();
     }
 
-    @Override
-    protected Professor criarEntidadeDosCampos() throws NumberFormatException {
-        return new Professor(
-                campoNome.getText().trim(),
-                campoTitulacao.getText().trim(),
-                parseSalario()
-        );
+    private void excluir() {
+        int linha = tabela.getSelectedRow();
+        if (linha < 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Selecione uma linha na tabela para excluir!",
+                    "Nenhuma seleção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        professores.remove(linha);
+        professorArquivo.salvarTodos(professores);
+        atualizarTabela();
+        limparCampos();
     }
 
-    @Override
-    protected void atualizarEntidade(Professor professor) throws NumberFormatException {
-        professor.setNome(campoNome.getText().trim());
-        professor.setTitulacao(campoTitulacao.getText().trim());
-        professor.setSalario(parseSalario());
+    private void atualizarTabela() {
+        modeloTabela.setRowCount(0);
+        for (Professor professor : professores) {
+            modeloTabela.addRow(new Object[]{
+                    professor.getNome(),
+                    professor.getTitulacao(),
+                    String.format("%.2f", professor.getSalario())
+            });
+        }
     }
 
-    @Override
-    protected void preencherCampos(Professor professor) {
-        campoNome.setText(professor.getNome());
-        campoTitulacao.setText(professor.getTitulacao());
-        campoSalario.setText(String.format("%.2f", professor.getSalario()));
-    }
-
-    @Override
-    protected void limparCampos() {
+    private void limparCampos() {
         campoNome.setText("");
         campoTitulacao.setText("");
         campoSalario.setText("");
-    }
-
-    @Override
-    protected void tratarErroNumero(NumberFormatException ex) {
-        JOptionPane.showMessageDialog(this,
-                "O salário deve ser um valor numérico válido!\nExemplo: 6200,50",
-                "Valor inválido", JOptionPane.ERROR_MESSAGE);
     }
 }
